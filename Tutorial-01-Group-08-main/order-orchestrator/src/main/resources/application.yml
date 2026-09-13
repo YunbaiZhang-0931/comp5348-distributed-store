@@ -1,0 +1,29 @@
+spring:
+  application:
+    name: order-orchestrator
+  datasource:
+    url: jdbc:postgresql://localhost:5432/orchestrator
+    driver-class-name: org.postgresql.Driver
+    username: user_name
+    password: psd
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+store:
+  base-url: http://localhost:8080/api/orders  # Orchestrator 调用 Store 服务接口
+
+server:
+  port: 8084

@@ -1,0 +1,56 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Store Login</title>
+    <style>
+        body { font-family: Arial; display: flex; flex-direction: column; align-items: center; margin-top: 100px; }
+        .login-box { border: 1px solid #ccc; padding: 20px; border-radius: 10px; width: 300px; text-align: center; }
+        input { width: 90%; margin: 10px 0; padding: 8px; }
+        button { padding: 10px 20px; }
+        .msg { margin-top: 15px; color: green; }
+        .error { color: red; }
+    </style>
+</head>
+<body>
+<div class="login-box">
+    <h2>Login</h2>
+    <input type="text" id="username" placeholder="Username" value="customer"><br>
+    <input type="password" id="password" placeholder="Password" value="COMP5348"><br>
+    <button onclick="login()">Login</button>
+    <div id="result" class="msg"></div>
+</div>
+
+<script>
+    async function login() {
+        const username = document.getElementById('username').value;
+        const password = document.getElementById('password').value;
+        const resultDiv = document.getElementById('result');
+
+        try {
+            const res = await fetch('http://localhost:8080/auth/login', {
+                method: 'POST',
+                headers: { 'Content-Type': 'application/json' },
+                body: JSON.stringify({ username, password })
+            });
+
+            if (res.ok) {
+                const data = await res.json();
+                resultDiv.textContent = `✅ Welcome, ${data.username}!`;
+                resultDiv.className = 'success';
+                localStorage.setItem("user", JSON.stringify(data)); // 存储登录信息
+                setTimeout(() => window.location.href = "/order.html", 1000); // 跳转到下单页
+
+            } else {
+                const errText = await res.text();
+                resultDiv.textContent = `❌ Login failed: ${errText}`;
+                resultDiv.className = 'error';
+            }
+        } catch (error) {
+            resultDiv.textContent = '⚠️ Cannot connect to backend.';
+            resultDiv.className = 'error';
+        }
+    }
+</script>
+</body>
+</html>

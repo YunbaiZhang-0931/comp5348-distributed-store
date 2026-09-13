@@ -1,0 +1,31 @@
+spring:
+  application:
+    name: delivery-service
+
+  datasource:
+    driver-class-name: org.postgresql.Driver
+    url: jdbc:postgresql://localhost:5432/deliverydb
+    username: user_name
+    password: psd
+
+  jpa:
+    hibernate:
+      ddl-auto: update
+    show-sql: false
+    properties:
+      hibernate:
+        dialect: org.hibernate.dialect.PostgreSQLDialect
+        format_sql: true
+
+  rabbitmq:
+    host: localhost
+    port: 5672
+    username: guest
+    password: guest
+
+delivery:
+  delay-ms: 5000     # 模拟阶段延迟
+  drop-rate: 0.05    # 模拟丢包率
+
+server:
+  port: 8083

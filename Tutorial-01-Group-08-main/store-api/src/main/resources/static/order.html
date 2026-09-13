@@ -1,0 +1,114 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <title>Store - Create Order</title>
+    <style>
+        body { font-family: Arial, sans-serif; display: flex; justify-content: center; margin-top: 80px; }
+        .box { border: 1px solid #ccc; padding: 30px; border-radius: 8px; width: 400px; text-align: center; box-shadow: 0 0 10px rgba(0,0,0,0.1); }
+        select, input { width: 90%; padding: 8px; margin: 10px 0; }
+        button { padding: 8px 20px; cursor: pointer; margin: 8px; }
+        .success { color: green; margin-top: 15px; }
+        .error { color: red; margin-top: 15px; }
+    </style>
+</head>
+<body>
+<div class="box">
+    <h2>Create Order</h2>
+
+    <div>
+        <label>Product:</label><br>
+        <select id="itemSelect"></select>
+    </div>
+    <div>
+        <label>Quantity:</label><br>
+        <input type="number" id="qty" value="1" min="1">
+    </div>
+    <button onclick="createOrder()">Submit Order</button>
+    <button id="cancelBtn" style="display:none;" onclick="cancelOrder()">Cancel Order</button>
+
+    <div id="msg"></div>
+</div>
+
+<script>
+    const user = JSON.parse(localStorage.getItem("user"));
+    if (!user) {
+      alert("Please login first!");
+      window.location.href = "/login.html";
+    }
+
+    const msgDiv = document.getElementById("msg");
+    const itemSelect = document.getElementById("itemSelect");
+    const cancelBtn = document.getElementById("cancelBtn");
+    let currentOrderId = null; // 保存当前订单号
+
+    // 加载商品列表
+    async function loadItems() {
+      try {
+        const res = await fetch("/orders/items");
+        const items = await res.json();
+        itemSelect.innerHTML = items.map(it => `<option value="${it.id}">${it.name} ($${it.unitPrice})</option>`).join("");
+      } catch (e) {
+        msgDiv.textContent = "❌ Failed to load items.";
+        msgDiv.className = "error";
+      }
+    }
+
+    // 创建订单
+    async function createOrder() {
+      msgDiv.textContent = "";
+      cancelBtn.style.display = "none";
+      const body = {
+        userId: user.userId,
+        itemId: itemSelect.value,
+        quantity: parseInt(document.getElementById("qty").value)
+      };
+      try {
+        const res = await fetch("/orders", {
+          method: "POST",
+          headers: {"Content-Type": "application/json"},
+          body: JSON.stringify(body)
+        });
+        if (res.ok) {
+          const data = await res.json();
+          currentOrderId = data.orderId;
+          msgDiv.innerHTML = `✅ Order Created!<br>Order ID: ${data.orderId}<br>Amount: $${data.amount}`;
+          msgDiv.className = "success";
+          cancelBtn.style.display = "inline-block"; // 显示取消按钮
+        } else {
+          const err = await res.text();
+          msgDiv.textContent = "❌ Failed: " + err;
+          msgDiv.className = "error";
+        }
+      } catch (e) {
+        msgDiv.textContent = "⚠️ Cannot connect to backend.";
+        msgDiv.className = "error";
+      }
+    }
+
+    // 取消订单
+    async function cancelOrder() {
+      if (!currentOrderId) return;
+      if (!confirm("Are you sure you want to cancel this order?")) return;
+      try {
+        const res = await fetch(`/orders/${currentOrderId}/cancel`, { method: "POST" });
+        if (res.ok) {
+          const data = await res.json();
+          msgDiv.textContent = `🟡 ${data.message || "Cancel requested."}`;
+          msgDiv.className = "success";
+          cancelBtn.style.display = "none";
+        } else {
+          const err = await res.text();
+          msgDiv.textContent = "❌ Failed to cancel: " + err;
+          msgDiv.className = "error";
+        }
+      } catch (e) {
+        msgDiv.textContent = "⚠️ Cannot connect to backend.";
+        msgDiv.className = "error";
+      }
+    }
+
+    loadItems();
+</script>
+</body>
+</html>
